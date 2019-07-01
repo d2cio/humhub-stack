@@ -1,0 +1,58 @@
+version: '1.0'
+services:
+  - name: db
+    type: mariadb
+    version: 10.4
+    configuration: StandAlone
+    database: humhub
+    username: humhub
+    # Ask password on create
+    userPassword: null
+    password: null
+    ports:
+      - 3306
+    remoteAccess: false
+    deployTo:
+      - humhub
+
+  - name: humhub
+    type: php
+    version: 7.2
+    source:
+      type: git
+      url: https://github.com/humhub/humhub
+    extensions:
+      - mysqli
+      - opcache
+      - ldap
+      - exif
+      - intl
+      - pdo_mysql
+      - gd
+      - zip
+    pecl:
+      - apcu
+    volumes:
+      - directory: $MAIN_PATH/uploads
+    localDeps: |
+      composer update
+    deployTo:
+      - humhub
+
+  - name: web
+    type: nginx
+    version: 1.15
+    ports:
+      - 80
+      - 443
+    remoteAccess: true
+    serviceFiles:
+      - name: humhub
+    deployTo:
+      - humhub
+
+hosts:
+  - name: humhub
+    requirements:
+      cores: 1
+      memory: 2
